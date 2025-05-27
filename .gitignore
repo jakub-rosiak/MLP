@@ -1,0 +1,5 @@
+results/**/*.txt
+results/**/*.json
+.idea/
+.venv/
+__pycache__/
