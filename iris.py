@@ -4,6 +4,51 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def plot_training_error(file_path, save_path):
+    df = pd.read_csv(file_path)
+    plt.figure(figsize=(8, 5))
+    sns.lineplot(data=df, x='epoch', y='error', marker='o', color='green')
+    plt.title("Błąd względem epok")
+    plt.xlabel("Epoki")
+    plt.ylabel("Błąd")
+    plt.ylim(bottom=0)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
+
+def plot_confusion_matrix(confusion_matrix, class_labels, save_path):
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(confusion_matrix, annot=True, fmt='d', cmap='Blues',
+                xticklabels=class_labels, yticklabels=class_labels)
+    plt.title("Macierz pomyłek")
+    plt.xlabel("Przewidywany gatunek")
+    plt.ylabel("Prawdziwy gatunek")
+    plt.tight_layout()
+    plt.savefig(save_path)
+
+def plot_class_metrics(metrics, class_labels, save_path):
+    classes = class_labels if class_labels else list(range(len(metrics['precision'])))
+    x = np.arange(len(classes))
+
+    width = 0.25
+    plt.figure(figsize=(10, 6))
+    plt.bar(x - width, metrics['precision'], width, label='Precision')
+    plt.bar(x, metrics['recall'], width, label='Recall')
+    plt.bar(x + width, metrics['f1_score'], width, label='F1 Score')
+
+    plt.xlabel("Klasa")
+    plt.ylabel("Wynik")
+    plt.title("Precision, Recall, f F1 Score")
+    plt.xticks(x, classes)
+    plt.ylim(0, 1.1)
+    plt.legend()
+    plt.grid(axis='y')
+    plt.tight_layout()
+    plt.savefig(save_path)
+
 
 def evaluate_results(results):
     y_true = []
@@ -211,7 +256,7 @@ def main():
 
         epochs = get_epoch()
         error_limit = get_error_limit()
-        mlp.train(x_train, y_train, epochs, error_limit, error_file="./results/iris/errors.txt")
+        mlp.train(x_train, y_train, epochs, error_limit, error_file="./results/iris/errors.txt", log_interval=10)
 
     iris = load_iris_data()
     x = iris.iloc[:, :-1].values
@@ -228,6 +273,11 @@ def main():
 
     if not loaded:
         save_network(mlp)
+
+    plot_training_error("./results/iris/errors.txt", "./results/iris/plots/errors.png")
+    plot_confusion_matrix(metrics['confusion_matrix'], ["Setosa", "Versicolor", "Virginica"], "./results/iris/plots/confusion_matrix.png")
+    plot_class_metrics(metrics, ["Setosa", "Versicolor", "Virginica"], "./results/iris/plots/class_metrics.png")
+
 
 if __name__ == '__main__':
     main()
